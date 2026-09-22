@@ -1,5 +1,10 @@
 'use client';
 
+import { useRouter, useSearchParams } from 'next/navigation';
+
+// داخل مكون MemorizeContent:
+const router = useRouter();
+
 import { Suspense, use, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -580,23 +585,57 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
     setIsAnalyzing(true);
 
     try {
-      if (session?.id) {
-        await supabase
-          .from('memorization_sessions')
-          .update({
-            completed_ayahs: verifiedAyahNumbers.length,
-            status:
-              verifiedAyahNumbers.length === ayahs.length
-                ? 'completed'
-                : 'in_progress',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', session.id);
+      // 1. جلب بيانات المستخدم الحالية من Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setErrorMessage('عفواً، يجب تسجيل الدخول لحفظ التقدم.');
+        setIsAnalyzing(false);
+        return;
       }
 
+      // 2. تجهيز بيانات الجلسة للحفظ
+      const sessionPayload = {
+        user_id: user.id,
+        surah_number: surahNumber,
+        start_ayah: startAyah,
+        end_ayah: endAyah,
+        completed_ayahs: verifiedAyahNumbers.length,
+        status: verifiedAyahNumbers.length === ayahs.length ? 'completed' : 'in_progress',
+        updated_at: new Date().toISOString(),
+      };
+
+      if (session?.id) {
+        // إذا كان هناك جلسة مسجلة مسبقاً، قم بتحديثها
+        const { error } = await supabase
+          .from('memorization_sessions')
+          .update(sessionPayload)
+          .eq('id', session.id);
+
+        if (error) throw error;
+      } else {
+        // إذا كانت جلسة جديدة، قم بإنشائها داخل جدول الجلسات
+        const { data, error } = await supabase
+          .from('memorization_sessions')
+          .insert([{ ...sessionPayload, created_at: new Date().toISOString() }])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        if (data?.id) {
+          setSession((prev) => (prev ? { ...prev, id: data.id } : null));
+        }
+      }
+
+      // 3. تحديث الكاش لكي تظهر البيانات فوراً في الداشبورد والبروجرس
+      router.refresh();
+
+      // 4. الانتقال لشاشة النتيجة
       setStage('Result');
-    } catch {
-      setErrorMessage('تعذر حفظ نتيجة الجلسة.');
+    } catch (error) {
+      console.error('Error saving session:', error);
+      setErrorMessage('تعذر حفظ نتيجة الجلسة في قاعدة البيانات.');
     } finally {
       setIsAnalyzing(false);
     }
