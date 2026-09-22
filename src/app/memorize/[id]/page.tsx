@@ -1,13 +1,8 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-
-// داخل مكون MemorizeContent:
-const router = useRouter();
-
 import { Suspense, use, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 
 type Ayah = {
@@ -126,6 +121,7 @@ function formatTime(seconds: number) {
 }
 
 function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const searchParams = useSearchParams();
 
@@ -583,12 +579,16 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
     }
 
     setIsAnalyzing(true);
+    setErrorMessage(null);
 
     try {
       // 1. جلب بيانات المستخدم الحالية من Supabase
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-      if (!user) {
+      if (authError || !user) {
         setErrorMessage('عفواً، يجب تسجيل الدخول لحفظ التقدم.');
         setIsAnalyzing(false);
         return;
@@ -624,18 +624,21 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
         if (error) throw error;
 
         if (data?.id) {
-          setSession((prev) => (prev ? { ...prev, id: data.id } : null));
+          setSession({
+            id: data.id,
+            ...sessionPayload,
+          });
         }
       }
 
-      // 3. تحديث الكاش لكي تظهر البيانات فوراً في الداشبورد والبروجرس
+      // 3. تحديث الكاش لكي تظهر البيانات فوراً في الداشبورد
       router.refresh();
 
       // 4. الانتقال لشاشة النتيجة
       setStage('Result');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving session:', error);
-      setErrorMessage('تعذر حفظ نتيجة الجلسة في قاعدة البيانات.');
+      setErrorMessage(error?.message || 'تعذر حفظ نتيجة الجلسة في قاعدة البيانات.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -685,9 +688,7 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
         {/* الشبكة الرئيسية: الجهة اليمنى (التسميع والتفسير)، الجهة اليسرى (القرآن الشريف) */}
         <div style={mainGridStyle}>
 
-          {/* =========================================================
-              العمود الأول (اليمين): لوحة التسميع والتفسير الميسر
-             ========================================================= */}
+          {/* العمود الأول (اليمين): لوحة التسميع والتفسير الميسر */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
             {/* 1. مرحلة استماع التلاوة */}
@@ -718,11 +719,11 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
               </section>
             )}
 
-            {/* 2. مرحلة التسميع والاختبارات الفاخرة */}
+            {/* 2. مرحلة التسميع والاختبارات */}
             {stage === 'UserRecite' && (
               <section style={controlCardStyle}>
 
-                {/* أ. نطاق الاختبار (المقطع كاملاً / آية محددة) */}
+                {/* أ. نطاق الاختبار */}
                 <div style={{ marginBottom: '1.25rem' }}>
                   <span style={sectionTitleStyle}>1. اختر نطاق التسميع:</span>
                   <div style={scopeGridStyle}>
@@ -791,7 +792,7 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
                   </div>
                 )}
 
-                {/* ب. طريقة التسميع (كتابي / صوتي) */}
+                {/* ب. طريقة التسميع */}
                 <div style={{ marginBottom: '1.25rem' }}>
                   <span style={sectionTitleStyle}>2. طريقة التسميع:</span>
                   <div style={modeGridStyle}>
@@ -902,7 +903,7 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
                   </div>
                 )}
 
-                {/* زر الإنهاء والحفظ */}
+                {/* زر الإنهاء والحفظ في قاعدة البيانات */}
                 <button
                   onClick={finishSession}
                   disabled={isAnalyzing || !canFinishSession}
@@ -915,9 +916,11 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
                     cursor: canFinishSession ? 'pointer' : 'not-allowed',
                   }}
                 >
-                  {canFinishSession
-                    ? '✅ حفظ النتيجة وإنهاء التسميع'
-                    : `يلزم 75% لإتمام الجلسة — نتيجتك ${overallAccuracy}%`}
+                  {isAnalyzing
+                    ? 'جاري الحفظ في قاعدة البيانات...'
+                    : canFinishSession
+                      ? '✅ حفظ النتيجة وإنهاء التسميع'
+                      : `يلزم 75% لإتمام الجلسة — نتيجتك ${overallAccuracy}%`}
                 </button>
               </section>
             )}
@@ -974,15 +977,11 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
 
           </div>
 
-          {/* =========================================================
-              العمود الثاني (اليسار): المصحف الشريف الشامل مع إمكانية الإخفاء
-             ========================================================= */}
+          {/* العمود الثاني (اليسار): المصحف الشريف الشامل */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-            {/* بطاقة النص القرآني مع خيار الإخفاء للتسميع */}
             <section style={quranCardContainerStyle}>
 
-              {/* شريط أدوات المصحف العلوي */}
               <div style={quranHeaderStyle}>
                 <span style={{ fontSize: '0.9rem', color: '#065f46', fontWeight: 700 }}>
                   🕌 المصحف الشريف
@@ -997,7 +996,6 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
                 </button>
               </div>
 
-              {/* النص القرآني متصل ومطابق لمظهر المصحف */}
               <div style={{ position: 'relative' }}>
                 <div
                   style={{
@@ -1091,7 +1089,6 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
                   })}
                 </div>
 
-                {/* تراكب تنبيه عند إخفاء الآيات لضمان التسميع النزيه */}
                 {!isQuranVisible && (
                   <div style={hiddenQuranOverlayStyle}>
                     <span style={{ fontSize: '2rem' }}>🙈</span>
@@ -1109,7 +1106,6 @@ function MemorizeContent({ params }: { params: Promise<{ id: string }> }) {
               </div>
             </section>
 
-            {/* شريط ملخص الدقة العام */}
             {hasChecked && (
               <div style={summaryCardStyle}>
                 <span>دقة المقطع الإجمالية: <strong>{overallAccuracy}%</strong></span>
@@ -1153,7 +1149,7 @@ function PageMessage({
 }
 
 // ----------------------------------------------------------------
-// التنسيقات الفاخرة (Premium UI Layout)
+// التنسيقات (UI Layout)
 // ----------------------------------------------------------------
 
 const pageStyle = {
@@ -1170,7 +1166,7 @@ const containerStyle = {
 
 const headerStyle = {
   display: 'flex',
-  justifyInContent: 'space-between',
+  justifyContent: 'space-between',
   alignItems: 'center',
   gap: '1rem',
   flexWrap: 'wrap' as const,
@@ -1192,7 +1188,6 @@ const progressBadgeStyle = {
   fontWeight: 'bold',
 };
 
-// تقسيم الشبكة: العمود الأول (يمين) للتسميع، العمود الثاني (يسار) للقرآن الكريم
 const mainGridStyle = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
