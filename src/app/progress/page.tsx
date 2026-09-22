@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { motion, Variants } from 'framer-motion';
 import TasbihLoader from '@/components/ui/TasbihLoader';
 
 interface SurahProgress {
@@ -12,6 +13,24 @@ interface SurahProgress {
   totalAyahs: number;
   percentage: number;
 }
+
+// تعريف حركات الانتقال مع تحديد النوع لعدم حدوث أخطاء TypeScript في Vercel
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' },
+  },
+};
 
 // مصفوفة أسماء سور القرآن الكريم الـ 114
 const SURAH_NAMES = [
@@ -67,7 +86,7 @@ export default function ProgressPage() {
         const memorizedAyahsSet = new Set<string>();
 
         allSessions.forEach((s) => {
-          if (s.start_ayah && s.end_ayah) {
+          if (s.surah_number && s.start_ayah != null && s.end_ayah != null) {
             for (let a = s.start_ayah; a <= s.end_ayah; a++) {
               memorizedAyahsSet.add(`${s.surah_number}:${a}`);
             }
@@ -75,7 +94,7 @@ export default function ProgressPage() {
         });
 
         allLogs.forEach((log) => {
-          if (log.start_ayah && log.end_ayah) {
+          if (log.surah_number && log.start_ayah != null && log.end_ayah != null) {
             for (let a = log.start_ayah; a <= log.end_ayah; a++) {
               memorizedAyahsSet.add(`${log.surah_number}:${a}`);
             }
@@ -95,7 +114,9 @@ export default function ProgressPage() {
         memorizedAyahsSet.forEach((key) => {
           const [surahStr] = key.split(':');
           const surahNum = Number(surahStr);
-          surahMap[surahNum] = (surahMap[surahNum] || 0) + 1;
+          if (surahNum) {
+            surahMap[surahNum] = (surahMap[surahNum] || 0) + 1;
+          }
         });
 
         const activeSurahs: SurahProgress[] = Object.keys(surahMap).map((surahNumStr) => {
@@ -136,19 +157,23 @@ export default function ProgressPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-silver-50 via-white to-silver-100 p-6 md:p-8">
-      <div className="max-w-5xl mx-auto space-y-8">
-
+    <div className="min-h-screen bg-gradient-to-br from-silver-50 via-white to-silver-100 p-6 md:p-8" dir="rtl">
+      <motion.div
+        className="max-w-5xl mx-auto space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold font-cairo text-gradient-gold">التقدم الشامل</h1>
-          <Link href="/dashboard" className="text-secondary hover:underline font-cairo text-sm">
+        <motion.div variants={itemVariants} className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold font-cairo text-gradient-gold">التقدم الشامل 📊</h1>
+          <Link href="/dashboard" className="text-secondary hover:underline font-cairo text-sm font-semibold">
             ← العودة للوحة التحكم
           </Link>
-        </div>
+        </motion.div>
 
         {/* Total Progress Card */}
-        <div className="islamic-card islamic-border p-8 text-center space-y-4">
+        <motion.div variants={itemVariants} className="islamic-card islamic-border p-8 text-center space-y-4">
           <h2 className="text-xl font-cairo text-[var(--color-text-muted)]">نسبة الحفظ الإجمالية</h2>
           <div className="text-6xl font-extrabold font-cairo text-gradient-gold my-4">
             {overallProgress}%
@@ -156,11 +181,11 @@ export default function ProgressPage() {
           <p className="text-[var(--color-text)] font-cairo text-lg">
             لقد حفظت <span className="text-secondary font-bold">{totalVerifiedAyahs}</span> آية من أصل <span className="text-secondary font-bold">6236</span> آية.
           </p>
-        </div>
+        </motion.div>
 
         {/* Surahs Progress Section */}
-        <div className="space-y-4">
-          <h2 className="section-title">تقدم السور</h2>
+        <motion.div variants={itemVariants} className="space-y-4">
+          <h2 className="section-title text-xl font-bold font-cairo text-slate-800">تقدم السور</h2>
 
           {surahsProgress.length === 0 ? (
             <div className="islamic-card p-8 text-center space-y-4">
@@ -172,7 +197,7 @@ export default function ProgressPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {surahsProgress.map((surah) => (
-                <div key={surah.surahNumber} className="islamic-card p-5 space-y-3">
+                <motion.div key={surah.surahNumber} variants={itemVariants} className="islamic-card p-5 space-y-3">
                   <div className="flex justify-between items-center">
                     <h3 className="font-bold text-lg text-secondary font-cairo">
                       سورة {surah.surahName}
@@ -190,13 +215,13 @@ export default function ProgressPage() {
                   <div className="text-left text-xs text-secondary font-bold font-cairo">
                     {surah.percentage}%
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
 
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import TasbihLoader from '@/components/ui/TasbihLoader';
 
 interface Profile {
@@ -13,7 +13,7 @@ interface Profile {
   settings: any;
 }
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -21,7 +21,7 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
@@ -48,24 +48,21 @@ export default function ProfilePage() {
         return;
       }
 
-      // الإيميل بييجي من الـ session مباشرة (مصدر موثوق دايمًا)
       const authEmail = session.user.email || '';
       setEmail(authEmail);
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .single();
 
       if (data) {
-        // لو الصف موجود، استخدم بياناته، وارجع للـ auth email لو عمود email فاضي
         setProfile(data);
         setName(data.name || '');
         setEmail(data.email || authEmail);
         setTafsirMode(data.settings?.tafsirMode || 'On Request');
       } else {
-        // الصف مش موجود في profiles → أنشئه دلوقتي من بيانات الـ auth
         const newProfile = {
           id: session.user.id,
           name: session.user.user_metadata?.name || '',
@@ -83,7 +80,6 @@ export default function ProfilePage() {
           setProfile(created);
           setName(created.name || '');
         } else {
-          // حتى لو فشل الإنشاء، على الأقل نعرض الإيميل الصحيح
           setProfile({ id: session.user.id, name: '', email: authEmail, settings: {} });
         }
       }
@@ -155,8 +151,8 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className={`rounded-xl p-4 text-center font-cairo font-bold ${message.type === 'success'
-                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                : 'bg-red-50 text-red-800 border border-red-200'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-red-50 text-red-800 border border-red-200'
               }`}
           >
             {message.text}
