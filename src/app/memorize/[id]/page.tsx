@@ -24,9 +24,53 @@ type Stage = 'Sheikh' | 'UserRecite' | 'Result';
 type TestMode = 'voice' | 'write';
 type WordCheck = { word: string; matched: boolean };
 
-function cleanArabicText(text: string) {
-  return String(text || '')
-    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
+// =================================================================
+// 1. قاموس الحروف المقطعة (فواتح السور) والرسم العثماني
+// =================================================================
+const PHONETIC_MAP: Record<string, string> = {
+  // --- فواتح السور (الحروف المقطعة) ---
+  "الم": "الف لام ميم",
+  "المص": "الف لام ميم صاد",
+  "الر": "الف لام را",
+  "المر": "الف لام ميم را",
+  "كهيعص": "كاف ها يا عين صاد",
+  "طه": "طا ها",
+  "طسم": "طا سين ميم",
+  "طس": "طا سين",
+  "يس": "يا سين",
+  "ص": "صاد",
+  "حم": "حا ميم",
+  "عسق": "عين سين قاف",
+  "حمعسق": "حا ميم عين سين قاف",
+  "ق": "قاف",
+  "ن": "نون",
+
+  // --- أسماء الحروف المفردة ---
+  "أ": "الف", "ا": "الف", "ب": "با", "ت": "تا", "ث": "ثا",
+  "ج": "جيم", "ح": "حا", "خ": "خا", "د": "دال", "ذ": "ذال",
+  "ر": "را", "ز": "زاي", "س": "سين", "ش": "شين", "ض": "ضاد",
+  "ط": "طا", "ظ": "ظا", "ع": "عين", "غ": "غين", "ف": "فا",
+  "ك": "كاف", "ل": "لام", "م": "ميم", "ه": "ها", "و": "واو", "ي": "يا",
+
+  // --- كلمات الرسم العثماني الشائعة ---
+  "الصلوة": "الصلاه", "الصلوه": "الصلاه",
+  "الزكوة": "الزكاه", "الزكوه": "الزكاه",
+  "الحيوة": "الحياه", "الحيوه": "الحياه",
+  "الربوا": "الربا", "الربو": "الربا",
+  "مشكوة": "مشكاه", "مشكوه": "مشكاه",
+  "الغدوة": "الغداه", "الغدوه": "الغداه",
+  "باسم": "بسم", "لتتلوا": "لتتلو",
+  "يمحوا": "يمحو", "نبلوا": "نبلو"
+};
+
+// =================================================================
+// 2. دالة تنظيف النص مع دمج القاموس الصوتي للحروف
+// =================================================================
+function cleanArabicText(text: string): string {
+  if (!text) return '';
+
+  let cleaned = String(text || '')
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '') // إزالة التشكيل وعلامات المصحف
     .replace(/[أإآٱ]/g, 'ا')
     .replace(/ى/g, 'ي')
     .replace(/ة/g, 'ه')
@@ -34,8 +78,15 @@ function cleanArabicText(text: string) {
     .replace(/[^\u0621-\u064A\s]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+
+  const words = cleaned.split(' ');
+  const transformed = words.map((w) => PHONETIC_MAP[w] || w);
+  return transformed.join(' ');
 }
 
+// =================================================================
+// 3. خوارزمية قياس التشابه بين الكلمات (Levenshtein Distance)
+// =================================================================
 function wordSimilarity(first: string, second: string) {
   if (first === second) return 1;
   if (!first || !second) return 0;
@@ -62,29 +113,40 @@ function wordSimilarity(first: string, second: string) {
   return 1 - matrix[first.length][second.length] / Math.max(first.length, second.length);
 }
 
+// =================================================================
+// 4. خوارزمية مطابقة الكلمات المتقدمة (تدعم الحروف المقطعة والكلمات المركبة)
+// =================================================================
 function alignWords(expectedWords: string[], actualWords: string[]) {
   let actualCursor = 0;
 
   return expectedWords.map((word) => {
     const target = cleanArabicText(word);
+    const targetWordsCount = target.split(' ').filter(Boolean).length;
+
     let bestIndex = -1;
     let bestScore = 0;
+    let bestConsumed = 1;
 
     for (
       let index = actualCursor;
-      index < Math.min(actualCursor + 4, actualWords.length);
+      index < Math.min(actualCursor + 5, actualWords.length);
       index++
     ) {
-      const score = wordSimilarity(target, actualWords[index]);
+      // تجربة مطابقة كلمة واحدة أو مقطع مركب (مثل "الف لام ميم" المقابلة لـ "الم")
+      for (let len = 1; len <= Math.min(targetWordsCount + 1, actualWords.length - index); len++) {
+        const candidateSlice = actualWords.slice(index, index + len).join(' ');
+        const score = wordSimilarity(target, candidateSlice);
 
-      if (score > bestScore) {
-        bestScore = score;
-        bestIndex = index;
+        if (score > bestScore) {
+          bestScore = score;
+          bestIndex = index;
+          bestConsumed = len;
+        }
       }
     }
 
-    if (bestScore >= 0.82) {
-      actualCursor = bestIndex + 1;
+    if (bestScore >= 0.80) {
+      actualCursor = bestIndex + bestConsumed;
       return true;
     }
 
