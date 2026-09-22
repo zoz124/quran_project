@@ -1,0 +1,602 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================
+   ROOT COLORS
+   ========================================================= */
+
+@layer base {
+  :root {
+    --color-primary: #083e2b;
+    --color-primary-light: #285542;
+
+    --color-secondary: #c9a227;
+    --color-secondary-light: #dfbd4f;
+
+    /* Silver text palette */
+    --color-text: #d8dcdb;
+    --color-text-muted: #a8afac;
+
+    --color-border: #4a5450;
+
+    /* Olive card palette */
+    --color-olive-dark: #1c2b1f;
+    --color-olive-darker: #0f1a12;
+
+    --color-background: #e8eae9;
+    --color-card: #1c2b1f;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen font-cairo antialiased;
+
+    color: var(--color-text);
+
+    /*
+      خلفية الصفحات:
+      تدرج من الأبيض إلى الفضي
+    */
+    background:
+      linear-gradient(135deg,
+        #ffffff 0%,
+        #e8eaea 35%,
+        #d3d7d5 70%,
+        #b8bdba 100%);
+
+    background-attachment: fixed;
+  }
+
+  /*
+    تحسين شكل النصوص - كلها فضي
+  */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-cairo;
+    color: #e2e6e4;
+  }
+
+  p,
+  span,
+  label {
+    font-family: 'Cairo', sans-serif;
+    color: var(--color-text);
+  }
+
+  /*
+    تحديد شكل الـ scrollbar
+  */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #d3d7d5;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #8e9691;
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6b736e;
+  }
+}
+
+
+/* =========================================================
+   COMPONENTS
+   ========================================================= */
+
+@layer components {
+  /* =======================================================
+     PROFESSIONAL CARD - أبيض نظيف بظل خفيف
+     ======================================================= */
+
+  .islamic-card {
+    @apply relative overflow-hidden rounded-2xl;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7e6;
+
+    color: var(--color-text-dark, #1f3028);
+
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.04),
+      0 10px 30px rgba(0, 0, 0, 0.06);
+
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .islamic-card:hover {
+    transform: translateY(-2px);
+
+    border-color: #d6c27b;
+
+    box-shadow:
+      0 4px 10px rgba(0, 0, 0, 0.05),
+      0 14px 35px rgba(0, 0, 0, 0.09);
+  }
+
+  .islamic-card h1,
+  .islamic-card h2,
+  .islamic-card h3,
+  .islamic-card h4 {
+    color: #1f3028;
+  }
+
+  .islamic-card p,
+  .islamic-card span,
+  .islamic-card label {
+    color: #4a5750;
+  }
+
+  /* =======================================================
+     PRIMARY BUTTON
+     ======================================================= */
+
+  .btn-islamic-primary {
+    @apply relative inline-flex items-center justify-center;
+    @apply font-cairo font-bold;
+    @apply px-6 py-3 rounded-xl;
+
+    background: linear-gradient(145deg, #285542, #17372b);
+
+    color: #e8eaea;
+
+    border: 1px solid #244b3b;
+
+    box-shadow:
+      0 3px 8px rgba(0, 0, 0, 0.25);
+
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .btn-islamic-primary:hover {
+    background: linear-gradient(145deg, #336a52, #1e4736);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 5px 12px rgba(0, 0, 0, 0.35);
+  }
+
+
+  /* =======================================================
+     OUTLINE BUTTON
+     ======================================================= */
+
+  .btn-islamic-outline {
+    @apply relative inline-flex items-center justify-center;
+    @apply font-cairo font-bold;
+    @apply px-6 py-3 rounded-xl;
+
+    background: transparent;
+
+    color: #2f4a3b;
+
+    border: 1px solid #8e9691;
+
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .btn-islamic-outline:hover {
+    background: rgba(23, 55, 43, 0.06);
+
+    border-color: #c9a227;
+
+    color: #17372b;
+
+    transform: translateY(-1px);
+  }
+
+
+  /* =======================================================
+     GOLD BUTTON
+     ======================================================= */
+
+  .btn-gold {
+    @apply relative inline-flex items-center justify-center;
+    @apply font-cairo font-bold;
+    @apply px-6 py-3 rounded-xl;
+
+    background: linear-gradient(145deg, #dfbd4f, #c29d25);
+
+    color: #1c2b1f;
+
+    border: 1px solid #c29d25;
+
+    box-shadow:
+      0 3px 8px rgba(180, 145, 25, 0.25);
+
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .btn-gold:hover {
+    background: linear-gradient(145deg, #e9cc6a, #d4af37);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 5px 12px rgba(180, 145, 25, 0.35);
+  }
+
+
+  /* =======================================================
+     FORM CONTAINER - زيتي غامق مش شفاف
+     ======================================================= */
+
+  .form-container {
+    @apply rounded-2xl p-6 sm:p-8;
+
+    background: linear-gradient(160deg,
+        #1c2b1f 0%,
+        #131f16 100%);
+
+    border: 1px solid #3a4a3d;
+
+    box-shadow:
+      0 3px 8px rgba(0, 0, 0, 0.25),
+      0 12px 35px rgba(0, 0, 0, 0.35);
+  }
+
+
+  /* =======================================================
+     FORM GROUP
+     ======================================================= */
+
+  .form-group {
+    @apply flex flex-col gap-2;
+  }
+
+
+  /* =======================================================
+     FORM LABEL - فضي
+     ======================================================= */
+
+  .form-label {
+    @apply font-cairo font-semibold text-sm;
+
+    color: #c7cdca;
+  }
+
+
+  /* =======================================================
+     FORM INPUT - زيتي غامق solid
+     ======================================================= */
+
+  .form-input {
+    @apply w-full rounded-xl px-4 py-3;
+    @apply font-cairo text-sm;
+
+    background: #0f1a12;
+
+    color: #e2e6e4;
+
+    border: 1px solid #3a4a3d;
+
+    outline: none;
+
+    transition:
+      border-color 0.2s ease,
+      background 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .form-input::placeholder {
+    color: #6f7a73;
+  }
+
+  .form-input:hover {
+    border-color: #4a7a5f;
+
+    background: #131f16;
+  }
+
+  .form-input:focus {
+    background: #131f16;
+
+    border-color: #c9a227;
+
+    box-shadow:
+      0 0 0 3px rgba(201, 162, 39, 0.15);
+  }
+
+
+  /* =======================================================
+     FORM TEXTAREA - زيتي غامق solid
+     ======================================================= */
+
+  .form-textarea {
+    @apply w-full rounded-xl px-4 py-3;
+    @apply font-cairo text-sm;
+    @apply min-h-[120px] resize-y;
+
+    background: #0f1a12;
+
+    color: #e2e6e4;
+
+    border: 1px solid #3a4a3d;
+
+    outline: none;
+
+    transition:
+      border-color 0.2s ease,
+      background 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .form-textarea::placeholder {
+    color: #6f7a73;
+  }
+
+  .form-textarea:focus {
+    background: #131f16;
+
+    border-color: #c9a227;
+
+    box-shadow:
+      0 0 0 3px rgba(201, 162, 39, 0.15);
+  }
+
+
+  /* =======================================================
+     SELECT - زيتي غامق solid
+     ======================================================= */
+
+  .form-select {
+    @apply w-full rounded-xl px-4 py-3;
+    @apply font-cairo text-sm;
+
+    background: #0f1a12;
+
+    color: #e2e6e4;
+
+    border: 1px solid #3a4a3d;
+
+    outline: none;
+
+    transition:
+      border-color 0.2s ease,
+      background 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .form-select:focus {
+    background: #131f16;
+
+    border-color: #c9a227;
+
+    box-shadow:
+      0 0 0 3px rgba(201, 162, 39, 0.15);
+  }
+
+
+  /* =======================================================
+     ISLAMIC BORDER
+     ======================================================= */
+
+  .islamic-border {
+    @apply relative;
+  }
+
+  .islamic-border::before {
+    content: '';
+
+    @apply absolute inset-0 rounded-2xl pointer-events-none;
+
+    border: 1px solid rgba(201, 162, 39, 0.3);
+  }
+
+
+  /* =======================================================
+     PROGRESS BAR
+     ======================================================= */
+
+  .progress-bar {
+    @apply h-2.5 rounded-full overflow-hidden;
+
+    background: #f7fff8;
+
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  .progress-bar-fill {
+    @apply h-full rounded-full;
+
+    background: linear-gradient(90deg, #285542, #3d7a5c);
+
+    transition: width 0.5s ease;
+  }
+
+  .progress-bar-fill.complete {
+    background: linear-gradient(90deg, #c29d25, #d4af37);
+  }
+
+
+  /* =======================================================
+     SECTION TITLE - فضي
+     ======================================================= */
+
+  .section-title {
+    @apply font-cairo font-bold text-2xl;
+
+    color: #3a4a3f;
+
+    border-bottom: 1px solid #b8bdba;
+
+    padding-bottom: 12px;
+
+    margin-bottom: 24px;
+  }
+
+
+  /* =======================================================
+     CORNER DECORATIONS
+     ======================================================= */
+
+  .corner-decoration {
+    @apply absolute w-6 h-6;
+
+    border-color: rgba(201, 162, 39, 0.4);
+  }
+
+  .corner-decoration.top-left {
+    @apply top-0 left-0;
+    @apply border-t border-l rounded-tl-xl;
+  }
+
+  .corner-decoration.top-right {
+    @apply top-0 right-0;
+    @apply border-t border-r rounded-tr-xl;
+  }
+
+  .corner-decoration.bottom-left {
+    @apply bottom-0 left-0;
+    @apply border-b border-l rounded-bl-xl;
+  }
+
+  .corner-decoration.bottom-right {
+    @apply bottom-0 right-0;
+    @apply border-b border-r rounded-br-xl;
+  }
+}
+
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+
+@layer utilities {
+
+  /* =======================================================
+     GOLD TEXT
+     ======================================================= */
+
+  .text-gradient-gold {
+    background: linear-gradient(90deg,
+        #a98218,
+        #d4af37,
+        #a98218);
+
+    background-clip: text;
+    -webkit-background-clip: text;
+
+    color: transparent;
+  }
+
+
+  /* =======================================================
+     SILVER TEXT
+     ======================================================= */
+
+  .text-gradient-silver {
+    background: linear-gradient(90deg,
+        #8e9691,
+        #e2e6e4,
+        #8e9691);
+
+    background-clip: text;
+    -webkit-background-clip: text;
+
+    color: transparent;
+  }
+
+
+  /* =======================================================
+     EMERALD TEXT
+     ======================================================= */
+
+  .text-gradient-emerald {
+    background: linear-gradient(90deg,
+        #17372b,
+        #285542,
+        #17372b);
+
+    background-clip: text;
+    -webkit-background-clip: text;
+
+    color: transparent;
+  }
+
+
+  /* =======================================================
+     PAGE CONTAINER - تدرج أبيض إلى فضي
+     ======================================================= */
+
+  .page-container {
+    @apply min-h-screen w-full;
+    @apply px-4 sm:px-6 lg:px-8;
+    @apply py-6 sm:py-8;
+
+    background:
+      linear-gradient(135deg,
+        #ffffff 0%,
+        #e8eaea 40%,
+        #c7ccc9 100%);
+  }
+
+
+  /* =======================================================
+     SOFT PAGE BACKGROUND - أبيض إلى فضي
+     ======================================================= */
+
+  .page-background {
+    background:
+      radial-gradient(circle at top right,
+        rgba(212, 175, 55, 0.08),
+        transparent 30%),
+      linear-gradient(135deg,
+        #ffffff 0%,
+        #e5e8e6 45%,
+        #c2c7c4 100%);
+  }
+
+
+  /* =======================================================
+     SUBTLE ISLAMIC PATTERN
+     ======================================================= */
+
+  .bg-islamic-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A227' fill-opacity='0.045'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+
+  /* =======================================================
+     GLASS - أبقيتها للتوافق لكن مش شفافة زي الأول
+     ======================================================= */
+
+  .glass {
+    background: #1c2b1f;
+
+    border: 1px solid #3a4a3d;
+
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+}
